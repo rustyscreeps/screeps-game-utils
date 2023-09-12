@@ -1,0 +1,32 @@
+edition = "2021"
+version = "One"
+
+# General
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+
+# Comments
+comment_width = 80
+wrap_comments = true
+format_code_in_doc_comments = true
+
+# Imports
+imports_granularity = "Crate"
+reorder_imports = true
+
+# `mod` declarations
+reorder_modules = true
+
+# Items
+reorder_impl_items = false
+
+# fns
+fn_params_layout = "Tall"
+
+# Report bugs (bugs may cause other formatting issues)
+error_on_line_overflow = false
+error_on_unformatted = false
+
+# Use `MyStruct { x }` instead of `MyStruct { x: x }`
+use_field_init_shorthand = false
