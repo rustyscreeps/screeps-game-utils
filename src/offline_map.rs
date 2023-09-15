@@ -1,10 +1,17 @@
-use screeps::{game::map::RoomStatus, local::RoomName};
+use std::{collections::HashMap, fs, mem::MaybeUninit};
+
+use screeps::{
+    constants::ROOM_SIZE,
+    game::map::RoomStatus,
+    local::{LocalRoomTerrain, RoomName},
+};
 use serde::{
     de::{Error as _, Unexpected},
     Deserialize, Deserializer,
 };
 use serde_json;
-use std::{collections::HashMap, fs};
+
+const ROOM_AREA: usize = (ROOM_SIZE as usize) * (ROOM_SIZE as usize);
 
 #[derive(Deserialize, Debug)]
 pub struct OfflineShardData {
@@ -24,9 +31,8 @@ pub struct OfflineRoomData {
     /// Whether the room is a highway room
     #[serde(default)]
     pub bus: bool,
-    // todo get this converted into something usable -
-    // I guess the local terrain type
-    pub terrain: String,
+    #[serde(deserialize_with = "deserialize_room_terrain")]
+    pub terrain: LocalRoomTerrain,
     // todo need object wrappers
     pub objects: Vec<serde_json::Value>,
 }
@@ -54,13 +60,50 @@ where
         "closed" => Ok(RoomStatus::Closed),
         "novice" => Ok(RoomStatus::Novice),
         "respawn" => Ok(RoomStatus::Respawn),
-        // this value appears in exported rooms from maps.screepspl.us,
+        // "out of borders" value appears in API returns,
         // map to closed since that's effectively identical
         "out of borders" => Ok(RoomStatus::Closed),
         _ => Err(D::Error::invalid_value(
             Unexpected::Str(s),
             &"valid room status",
         )),
+    }
+}
+
+fn deserialize_room_terrain<'de, D>(deserializer: D) -> Result<LocalRoomTerrain, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = <&'de str>::deserialize(deserializer)?;
+    if s.len() == ROOM_AREA {
+        let mut data: Box<[MaybeUninit<u8>; ROOM_AREA]> =
+            Box::new([MaybeUninit::uninit(); ROOM_AREA]);
+        for (i, c) in s.chars().enumerate() {
+            let value = match c {
+                '0' => 0,
+                '1' => 1,
+                '2' => 2,
+                // leave the plain-swamps alone, against my better judgement?
+                '3' => 3,
+                _ => {
+                    return Err(D::Error::invalid_value(
+                        Unexpected::Char(c),
+                        &"valid terrain integer value",
+                    ))
+                }
+            };
+            data[i].write(value);
+        }
+        // SAFETY: we've initialized all the bytes, because we know we had 2500 to start
+        // with
+        Ok(LocalRoomTerrain::new_from_bits(unsafe {
+            std::mem::transmute::<Box<[MaybeUninit<u8>; ROOM_AREA]>, Box<[u8; ROOM_AREA]>>(data)
+        }))
+    } else {
+        Err(D::Error::invalid_value(
+            Unexpected::Str(s),
+            &"terrain string of correct length",
+        ))
     }
 }
 
