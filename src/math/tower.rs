@@ -42,11 +42,10 @@ pub fn tower_repair_power_at_range(mut range: u8) -> u32 {
     amount as u32
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     fn tower_attack_power_formula() {
         // at optimal range, the damage should be 100% of the attack power
