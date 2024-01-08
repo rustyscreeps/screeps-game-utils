@@ -1,7 +1,12 @@
 Unreleased
 ==========
 
-0.19.0 (2023-11-27)
+0.20.0 (2023-01-08)
+===================
+
+- Updated for 0.20 of screeps-game-api crate
+
+0.19.0 (2023-12-21)
 ===================
 
 - Updated for 0.19 of screeps-game-api crate
