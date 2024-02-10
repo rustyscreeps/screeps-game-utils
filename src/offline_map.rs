@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fs, mem::MaybeUninit};
 
 use screeps::{
-    constants::ROOM_SIZE,
+    constants::{Density, ResourceType, ROOM_SIZE},
     game::map::RoomStatus,
-    local::{LocalRoomTerrain, RoomName},
+    local::{LocalRoomTerrain, RawObjectId, RoomCoordinate, RoomName},
 };
 use serde::{
     de::{Error as _, Unexpected},
@@ -33,8 +33,94 @@ pub struct OfflineRoomData {
     pub bus: bool,
     #[serde(deserialize_with = "deserialize_room_terrain")]
     pub terrain: LocalRoomTerrain,
-    // todo need object wrappers
-    pub objects: Vec<serde_json::Value>,
+    pub objects: Vec<OfflineObject>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
+pub enum OfflineObject {
+    #[serde(rename_all = "camelCase")]
+    Controller {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+
+        level: u8,
+    },
+    #[serde(rename_all = "camelCase")]
+    Extractor {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+    },
+    #[serde(rename_all = "camelCase")]
+    KeeperLair {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+    },
+    #[serde(rename_all = "camelCase")]
+    Mineral {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+
+        density: Density,
+        mineral_type: ResourceType,
+        mineral_amount: u32,
+    },
+    #[serde(rename_all = "camelCase")]
+    Portal {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+
+        destination: OfflinePortalDestination,
+    },
+    #[serde(rename_all = "camelCase")]
+    Source {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+
+        energy: u16,
+        energy_capacity: u16,
+        ticks_to_regeneration: u16,
+    },
+    #[serde(rename_all = "camelCase")]
+    Terminal {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+    },
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum OfflinePortalDestination {
+    InterRoom {
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+    },
+    InterShard {
+        room: RoomName,
+        shard: String,
+    },
 }
 
 fn deserialize_offline_rooms<'de, D>(
