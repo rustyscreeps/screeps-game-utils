@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fs, mem::MaybeUninit};
 
 use screeps::{
-    constants::{ROOM_SIZE, Density, ResourceType},
+    constants::{Density, ResourceType, ROOM_SIZE},
     game::map::RoomStatus,
-    local::{LocalRoomTerrain, RoomName, RawObjectId, RoomCoordinate},
+    local::{LocalRoomTerrain, RawObjectId, RoomCoordinate, RoomName},
 };
 use serde::{
     de::{Error as _, Unexpected},
