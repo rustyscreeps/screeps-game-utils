@@ -37,7 +37,7 @@ pub struct OfflineRoomData {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
+#[serde(rename_all = "camelCase", tag = "type")]
 pub enum OfflineObject {
     #[serde(rename_all = "camelCase")]
     ConstructedWall {
@@ -115,6 +115,8 @@ pub enum OfflineObject {
         x: RoomCoordinate,
         y: RoomCoordinate,
     },
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug)]
