@@ -1,6 +1,8 @@
 Unreleased
 ==========
 
+- Parse objects in `OfflineRoomData` into `Vec<OfflineObject>` instead of `Vec<serde_json::Value>`
+
 0.20.0 (2023-01-08)
 ===================
 
