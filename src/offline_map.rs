@@ -40,6 +40,14 @@ pub struct OfflineRoomData {
 #[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
 pub enum OfflineObject {
     #[serde(rename_all = "camelCase")]
+    ConstructedWall {
+        #[serde(rename = "_id")]
+        id: RawObjectId,
+        room: RoomName,
+        x: RoomCoordinate,
+        y: RoomCoordinate,
+    },
+    #[serde(rename_all = "camelCase")]
     Controller {
         #[serde(rename = "_id")]
         id: RawObjectId,
