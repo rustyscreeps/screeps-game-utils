@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter::IntoIterator};
+use std::collections::HashMap;
 
 use screeps::{
     constants::ROOM_SIZE,
