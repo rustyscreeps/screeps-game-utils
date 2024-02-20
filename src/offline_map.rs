@@ -9,7 +9,6 @@ use serde::{
     de::{Error as _, Unexpected},
     Deserialize, Deserializer,
 };
-use serde_json;
 
 const ROOM_AREA: usize = (ROOM_SIZE as usize) * (ROOM_SIZE as usize);
 
