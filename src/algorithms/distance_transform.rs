@@ -16,129 +16,62 @@ use screeps::constants::extra::ROOM_SIZE;
 pub fn distance_transform(room_data: &offline_map::OfflineRoomData) -> LocalCostMatrix {
   let mut initial_cm = LocalCostMatrix::new();
 
-  for x in 0..ROOM_SIZE {
-    for y in 0..ROOM_SIZE {
-      let position = unsafe { RoomXY::unchecked_new(x as u8, y as u8) };
-      let val = match &room_data.terrain.get_xy(position) {
-        screeps::constants::Terrain::Wall => 0,
-        _ => 255,
-      };
-
-      initial_cm.set(position, val);
-    }
+  for (xy, cm_val) in initial_cm.iter_mut() {
+    *cm_val = match room_data.terrain.get_xy(xy) {
+      screeps::constants::Terrain::Wall => 0,
+      _ => u8::MAX
+    };
   }
-
   distance_transform_from_cost_matrix(initial_cm)
 }
 
 /// Provides a Cost Matrix with values equal to the Chebyshev distance from any position
 /// in the provided initial Cost Matrix with a value set to 0. This allows for calculating
-/// the distance transform from an arbitrary set of positions. Other position values should
-/// be set to 255 to ensure the calculations work correctly.
+/// the distance transform from an arbitrary set of positions. Other position values in the
+/// initial Cost Matrix should be initialized to 255 (u8::MAX) to ensure the calculations
+/// work correctly.
 pub fn distance_transform_from_cost_matrix(initial_cm: LocalCostMatrix) -> LocalCostMatrix {
 
   // Copy the initial cost matrix into the output cost matrix
   let mut cm = initial_cm.clone();
 
-  // Pass 1: Left-to-Right, Top-to-Bottom
+  // Pass 1: Top-to-Bottom, Left-to-Right
 
   for x in 0..ROOM_SIZE {
     for y in 0..ROOM_SIZE {
       let current_position = unsafe { RoomXY::unchecked_new(x as u8, y as u8) };
 
       // The distance to the closest wall is the minimum of the current position value and
-      // all of its neighbors. However, since we're going RTL:TTB, we can ignore tiles we
-      // know we haven't visited yet: Right, BottomRight, and Bottom. We could include them
+      // all of its neighbors. However, since we're going TTB:LTR, we can ignore tiles we
+      // know we haven't visited yet: TopRight, Right, BottomRight, and Bottom. We could include them
       // and their default max values should get ignored, but why waste the processing cycles?
-      let mut neighbor_values: [u8; 5] = [255; 5];
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::Top) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[0] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::Left) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[1] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::TopLeft) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[2] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::TopRight) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[3] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::BottomLeft) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[4] = value;
-      }
-
-      let current_value = cm.get(current_position);
-
-      let neighbors_minimum = match neighbor_values.iter().min() {
-        Some(value) => match value {
-          255 => 255,
-          _ => value + 1
-        },
-        None => 255,
-      };
-
-      let min_value = cmp::min(current_value, neighbors_minimum);
+      let min_value = [Direction::Top, Direction::TopLeft, Direction::Left, Direction::BottomLeft].into_iter()
+        .filter_map(|dir| current_position.checked_add_direction(dir))
+        .map(|position| cm.get(position))
+        .min()
+        .map(|x| x.saturating_add(1))
+        .map(|x| x.min(cm.get(current_position)))
+        .unwrap_or_else(|| cm.get(current_position));
 
       cm.set(current_position, min_value);
     }
   }
 
-  // Pass 2: Right-to-Left, Bottom-to-Top
+  // Pass 2: Bottom-to-Top, Right-to-Left
 
   for x in (0..ROOM_SIZE).rev() {
     for y in (0..ROOM_SIZE).rev() {
       let current_position = unsafe { RoomXY::unchecked_new(x as u8, y as u8) };
 
-      // The same logic as with Pass 1 applies here, we're just going RTL:BTT instead, so the
-      // neighbors we ignore are: Left, TopLeft, and Top.
-      let mut neighbor_values: [u8; 5] = [255; 5];
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::Bottom) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[0] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::Right) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[1] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::BottomRight) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[2] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::TopRight) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[3] = value;
-      }
-
-      if let Some(neighbor_position) = current_position.checked_add_direction(Direction::BottomLeft) {
-        let value = cm.get(neighbor_position);
-        neighbor_values[4] = value;
-      }
-
-      let current_value = cm.get(current_position);
-
-      let neighbors_minimum = match neighbor_values.iter().min() {
-        Some(value) => match value {
-          255 => 255,
-          _ => value + 1
-        },
-        None => 255,
-      };
-
-      let min_value = cmp::min(current_value, neighbors_minimum);
+      // The same logic as with Pass 1 applies here, we're just going BTT:RTL instead, so the
+      // neighbors we ignore are: BottomLeft, Left, TopLeft, and Top.
+      let min_value = [Direction::Bottom, Direction::Right, Direction::BottomRight, Direction::TopRight].into_iter()
+        .filter_map(|dir| current_position.checked_add_direction(dir))
+        .map(|position| cm.get(position))
+        .min()
+        .map(|x| x.saturating_add(1))
+        .map(|x| x.min(cm.get(current_position)))
+        .unwrap_or_else(|| cm.get(current_position));
 
       cm.set(current_position, min_value);
     }
