@@ -9,7 +9,9 @@ use screeps::{
 /// Provides a Cost Matrix with values equal to the Chebyshev distance from any
 /// wall terrain. This does *not* calculate based on constructed walls, only
 /// terrain walls.
-pub fn chebyshev_distance_transform_from_terrain(room_terrain: &LocalRoomTerrain) -> LocalCostMatrix {
+pub fn chebyshev_distance_transform_from_terrain(
+    room_terrain: &LocalRoomTerrain,
+) -> LocalCostMatrix {
     let mut initial_cm = LocalCostMatrix::new();
 
     for (xy, cm_val) in initial_cm.iter_mut() {
@@ -26,7 +28,9 @@ pub fn chebyshev_distance_transform_from_terrain(room_terrain: &LocalRoomTerrain
 /// allows for calculating the distance transform from an arbitrary set of
 /// positions. Other position values in the initial Cost Matrix should be
 /// initialized to 255 (u8::MAX) to ensure the calculations work correctly.
-pub fn chebyshev_distance_transform_from_cost_matrix(initial_cm: LocalCostMatrix) -> LocalCostMatrix {
+pub fn chebyshev_distance_transform_from_cost_matrix(
+    initial_cm: LocalCostMatrix,
+) -> LocalCostMatrix {
     // Copy the initial cost matrix into the output cost matrix
     let mut cm = initial_cm.clone();
 
