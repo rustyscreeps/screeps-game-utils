@@ -1,6 +1,8 @@
 Unreleased
 ==========
 
+- Add `algorithms::distance_transform` module with functions for calculating distance transforms
+
 0.21.1 (2023-05-15)
 ===================
 
