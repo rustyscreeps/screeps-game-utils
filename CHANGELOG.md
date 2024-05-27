@@ -2,6 +2,9 @@ Unreleased
 ==========
 
 - Add `algorithms::distance_transform` module with functions for calculating distance transforms
+- Add dependency on `chrono` crate for handling returned date types
+- Add `object::creation_datetime` function for determining the creation timestamp of objects
+  with MongoDB-style IDs
 
 0.21.1 (2023-05-15)
 ===================
