@@ -161,7 +161,9 @@ impl From<LargeCostMatrix> for LocalCostMatrix {
             .to_vec()
             .iter()
             .enumerate()
-            .for_each(|(idx, &val)| ret_lcm.set(linear_index_to_xy(idx), val.try_into().unwrap_or(u8::MAX)));
+            .for_each(|(idx, &val)| {
+                ret_lcm.set(linear_index_to_xy(idx), val.try_into().unwrap_or(u8::MAX))
+            });
 
         ret_lcm
     }
@@ -175,7 +177,9 @@ impl From<&LargeCostMatrix> for LocalCostMatrix {
             .to_vec()
             .iter()
             .enumerate()
-            .for_each(|(idx, &val)| ret_lcm.set(linear_index_to_xy(idx), val.try_into().unwrap_or(u8::MAX)));
+            .for_each(|(idx, &val)| {
+                ret_lcm.set(linear_index_to_xy(idx), val.try_into().unwrap_or(u8::MAX))
+            });
 
         ret_lcm
     }
