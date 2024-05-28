@@ -2,6 +2,8 @@ Unreleased
 ==========
 
 - Add `algorithms::distance_transform` module with functions for calculating distance transforms
+- Add `algorithms::floodfill` module with functions for calculating flood-fills
+- Add `LargeCostMatrix` struct for cost matrices that need more than `u8` sized value data
 
 0.21.1 (2023-05-15)
 ===================
