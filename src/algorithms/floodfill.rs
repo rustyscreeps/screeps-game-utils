@@ -27,7 +27,11 @@ pub fn get_obstacles_lcm_from_terrain(room_terrain: &LocalRoomTerrain) -> LocalC
 ///
 /// The obstacles Cost Matrix should have u8::MAX set on all positions that are
 /// obstacles, and 0 everywhere else.
-pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix, max_distance: u16) -> LargeCostMatrix {
+pub fn numerical_floodfill(
+    origins: &Vec<RoomXY>,
+    obstacles: &LocalCostMatrix,
+    max_distance: u16,
+) -> LargeCostMatrix {
     let mut output_cm = LargeCostMatrix::new_with_default(u16::MAX);
 
     let mut queue: VecDeque<RoomXY> = VecDeque::new();
