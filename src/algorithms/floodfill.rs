@@ -27,7 +27,7 @@ pub fn get_obstacles_lcm_from_terrain(room_terrain: &LocalRoomTerrain) -> LocalC
 ///
 /// The obstacles Cost Matrix should have u8::MAX set on all positions that are
 /// obstacles, and 0 everywhere else.
-pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix) -> LargeCostMatrix {
+pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix, max_distance: u16) -> LargeCostMatrix {
     let mut output_cm = LargeCostMatrix::new_with_default(u16::MAX);
 
     let mut queue: VecDeque<RoomXY> = VecDeque::new();
@@ -43,6 +43,8 @@ pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix) -
         // We've visited this origin position
         seen.set(*current_position, 1);
 
+        let neighbor_distance = 1;
+
         // Check each neighbor of the current origin position for validity and add it to
         // the queue to be checked
         Direction::iter()
@@ -51,9 +53,11 @@ pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix) -
             .for_each(|position| {
                 // Only process neighbors that haven't been seen yet
                 if seen.get(position) == 0 {
-                    queue.push_back(position);
-                    seen.set(position, 1);
-                    output_cm.set(position, 1);
+                    if neighbor_distance <= max_distance {
+                        queue.push_back(position);
+                        seen.set(position, 1);
+                        output_cm.set(position, neighbor_distance);
+                    }
                 }
             });
     }
@@ -82,12 +86,14 @@ pub fn numerical_floodfill(origins: &Vec<RoomXY>, obstacles: &LocalCostMatrix) -
                 .for_each(|position| {
                     // Only process neighbors that haven't been seen yet
                     if seen.get(position) == 0 {
-                        queue.push_back(position);
-                        seen.set(position, 1);
+                        if neighbor_distance <= max_distance {
+                            queue.push_back(position);
+                            seen.set(position, 1);
 
-                        // Only update the position distance if it hasn't already been set
-                        if output_cm.get(position) == u16::MAX {
-                            output_cm.set(position, neighbor_distance);
+                            // Only update the position distance if it hasn't already been set
+                            if output_cm.get(position) == u16::MAX {
+                                output_cm.set(position, neighbor_distance);
+                            }
                         }
                     }
                 });
@@ -108,7 +114,7 @@ pub fn reachability_floodfill(
     origins: &Vec<RoomXY>,
     obstacles: &LocalCostMatrix,
 ) -> LocalCostMatrix {
-    let ff_lg_cm = numerical_floodfill(origins, obstacles);
+    let ff_lg_cm = numerical_floodfill(origins, obstacles, u16::MAX);
 
     let mut ret_cm = LocalCostMatrix::new();
 
