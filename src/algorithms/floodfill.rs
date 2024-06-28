@@ -56,19 +56,17 @@ pub fn numerical_floodfill(
             .filter(|position| obstacles.get(*position) == 0)
             .for_each(|position| {
                 // Only process neighbors that haven't been seen yet
-                if seen.get(position) == 0 {
-                    if neighbor_distance <= max_distance {
-                        queue.push_back(position);
-                        seen.set(position, 1);
-                        output_cm.set(position, neighbor_distance);
-                    }
+                if seen.get(position) == 0 && neighbor_distance <= max_distance {
+                    queue.push_back(position);
+                    seen.set(position, 1);
+                    output_cm.set(position, neighbor_distance);
                 }
             });
     }
 
     // Process all entries in the queue
     let mut max_queue_length = 0;
-    while queue.len() > 0 {
+    while !queue.is_empty() {
         let queue_length = queue.len();
         if queue_length > max_queue_length {
             max_queue_length = queue_length;
@@ -89,15 +87,13 @@ pub fn numerical_floodfill(
                 .filter(|position| obstacles.get(*position) == 0)
                 .for_each(|position| {
                     // Only process neighbors that haven't been seen yet
-                    if seen.get(position) == 0 {
-                        if neighbor_distance <= max_distance {
-                            queue.push_back(position);
-                            seen.set(position, 1);
+                    if seen.get(position) == 0 && neighbor_distance <= max_distance {
+                        queue.push_back(position);
+                        seen.set(position, 1);
 
-                            // Only update the position distance if it hasn't already been set
-                            if output_cm.get(position) == u16::MAX {
-                                output_cm.set(position, neighbor_distance);
-                            }
+                        // Only update the position distance if it hasn't already been set
+                        if output_cm.get(position) == u16::MAX {
+                            output_cm.set(position, neighbor_distance);
                         }
                     }
                 });
