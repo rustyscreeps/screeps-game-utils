@@ -8,7 +8,8 @@ pub enum RoomType {
     Center,
 }
 
-/// Gets the `RoomType` for a given room name, assuming the map in use follows the normal sector layout.
+/// Gets the `RoomType` for a given room name, assuming the map in use follows
+/// the normal sector layout.
 pub fn room_type_for_name(room_name: RoomName) -> RoomType {
     let x_coord = room_name.x_coord();
     let x_mod = if x_coord < 0 {
@@ -41,31 +42,85 @@ mod test {
 
     #[test]
     fn room_types() {
-        assert_eq!(room_type_for_name(RoomName::new("W0N0").unwrap()), RoomType::Highway);
-        assert_eq!(room_type_for_name(RoomName::new("E0S0").unwrap()), RoomType::Highway);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W0N0").unwrap()),
+            RoomType::Highway
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E0S0").unwrap()),
+            RoomType::Highway
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W1N1").unwrap()), RoomType::Normal);
-        assert_eq!(room_type_for_name(RoomName::new("E1S1").unwrap()), RoomType::Normal);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W1N1").unwrap()),
+            RoomType::Normal
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E1S1").unwrap()),
+            RoomType::Normal
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W3N3").unwrap()), RoomType::Normal);
-        assert_eq!(room_type_for_name(RoomName::new("E3S3").unwrap()), RoomType::Normal);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W3N3").unwrap()),
+            RoomType::Normal
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E3S3").unwrap()),
+            RoomType::Normal
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W4N4").unwrap()), RoomType::Keeper);
-        assert_eq!(room_type_for_name(RoomName::new("E4S4").unwrap()), RoomType::Keeper);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W4N4").unwrap()),
+            RoomType::Keeper
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E4S4").unwrap()),
+            RoomType::Keeper
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W5N5").unwrap()), RoomType::Center);
-        assert_eq!(room_type_for_name(RoomName::new("E5S5").unwrap()), RoomType::Center);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W5N5").unwrap()),
+            RoomType::Center
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E5S5").unwrap()),
+            RoomType::Center
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W6N6").unwrap()), RoomType::Keeper);
-        assert_eq!(room_type_for_name(RoomName::new("E6S6").unwrap()), RoomType::Keeper);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W6N6").unwrap()),
+            RoomType::Keeper
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E6S6").unwrap()),
+            RoomType::Keeper
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W7N7").unwrap()), RoomType::Normal);
-        assert_eq!(room_type_for_name(RoomName::new("E7S7").unwrap()), RoomType::Normal);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W7N7").unwrap()),
+            RoomType::Normal
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E7S7").unwrap()),
+            RoomType::Normal
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W9N9").unwrap()), RoomType::Normal);
-        assert_eq!(room_type_for_name(RoomName::new("E9S9").unwrap()), RoomType::Normal);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W9N9").unwrap()),
+            RoomType::Normal
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E9S9").unwrap()),
+            RoomType::Normal
+        );
 
-        assert_eq!(room_type_for_name(RoomName::new("W10N10").unwrap()), RoomType::Highway);
-        assert_eq!(room_type_for_name(RoomName::new("E10S10").unwrap()), RoomType::Highway);
+        assert_eq!(
+            room_type_for_name(RoomName::new("W10N10").unwrap()),
+            RoomType::Highway
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E10S10").unwrap()),
+            RoomType::Highway
+        );
     }
 }
