@@ -29,7 +29,7 @@ pub fn room_type_for_name(room_name: RoomName) -> RoomType {
         RoomType::Highway
     } else if x_mod == 5 && y_mod == 5 {
         RoomType::Center
-    } else if x_mod >= 4 && x_mod <= 6 && y_mod >= 4 && y_mod <= 6 {
+    } else if (4..=6).contains(&x_mod) && (4..=6).contains(&y_mod) {
         RoomType::Keeper
     } else {
         RoomType::Normal
