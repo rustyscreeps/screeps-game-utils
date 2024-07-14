@@ -5,6 +5,8 @@ Unreleased
 - Add dependency on `chrono` crate for handling returned date types
 - Add `object::creation_datetime` function for determining the creation timestamp of objects
   with MongoDB-style IDs
+- Add `map::room_type_for_name` function and `map::RoomType` enum for determining the room type
+  of rooms in a default sector layout
 
 0.21.1 (2023-05-15)
 ===================
