@@ -4,6 +4,7 @@ use screeps::local::RoomName;
 pub enum RoomType {
     Normal,
     Highway,
+    HighwayIntersection,
     Keeper,
     Center,
 }
@@ -25,7 +26,9 @@ pub fn room_type_for_name(room_name: RoomName) -> RoomType {
         y_coord % 10
     };
 
-    if x_mod == 0 || y_mod == 0 {
+    if x_mod == 0 && y_mod == 0 {
+        RoomType::HighwayIntersection
+    } else if x_mod == 0 || y_mod == 0 {
         RoomType::Highway
     } else if x_mod == 5 && y_mod == 5 {
         RoomType::Center
@@ -44,10 +47,19 @@ mod test {
     fn room_types() {
         assert_eq!(
             room_type_for_name(RoomName::new("W0N0").unwrap()),
-            RoomType::Highway
+            RoomType::HighwayIntersection
         );
         assert_eq!(
             room_type_for_name(RoomName::new("E0S0").unwrap()),
+            RoomType::HighwayIntersection
+        );
+
+        assert_eq!(
+            room_type_for_name(RoomName::new("W0N1").unwrap()),
+            RoomType::Highway
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E0S1").unwrap()),
             RoomType::Highway
         );
 
@@ -116,10 +128,19 @@ mod test {
 
         assert_eq!(
             room_type_for_name(RoomName::new("W10N10").unwrap()),
-            RoomType::Highway
+            RoomType::HighwayIntersection
         );
         assert_eq!(
             room_type_for_name(RoomName::new("E10S10").unwrap()),
+            RoomType::HighwayIntersection
+        );
+
+        assert_eq!(
+            room_type_for_name(RoomName::new("W11N10").unwrap()),
+            RoomType::Highway
+        );
+        assert_eq!(
+            room_type_for_name(RoomName::new("E11S10").unwrap()),
             RoomType::Highway
         );
     }
