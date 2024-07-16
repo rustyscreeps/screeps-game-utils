@@ -2,6 +2,11 @@ Unreleased
 ==========
 
 - Add `algorithms::distance_transform` module with functions for calculating distance transforms
+- Add dependency on `chrono` crate for handling returned date types
+- Add `object::creation_datetime` function for determining the creation timestamp of objects
+  with MongoDB-style IDs
+- Add `map::room_type_for_name` function and `map::RoomType` enum for determining the room type
+  of rooms in a default sector layout
 - Add `algorithms::floodfill` module with functions for calculating flood-fills
 - Add `LargeCostMatrix` struct for cost matrices that need more than `u8` sized value data
 
