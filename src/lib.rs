@@ -1,4 +1,5 @@
 pub mod algorithms;
+pub mod large_cost_matrix;
 pub mod map;
 pub mod math;
 pub mod object;
