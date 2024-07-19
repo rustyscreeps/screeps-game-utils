@@ -12,7 +12,7 @@ use serde::{
 
 const ROOM_AREA: usize = (ROOM_SIZE as usize) * (ROOM_SIZE as usize);
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct OfflineShardData {
     /// A text description of the map dump
     pub description: String,
@@ -21,7 +21,7 @@ pub struct OfflineShardData {
     pub rooms: HashMap<RoomName, OfflineRoomData>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct OfflineRoomData {
     #[serde(rename = "room")]
     pub room_name: RoomName,
@@ -35,7 +35,7 @@ pub struct OfflineRoomData {
     pub objects: Vec<OfflineObject>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum OfflineObject {
     #[serde(rename_all = "camelCase")]
@@ -118,7 +118,7 @@ pub enum OfflineObject {
     Unknown,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum OfflinePortalDestination {
     InterRoom {
