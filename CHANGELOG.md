@@ -1,6 +1,10 @@
 Unreleased
 ==========
 
+0.22.0 (2024-08-27)
+===================
+
+- Updated to 0.22 of screeps-game-api crate
 - Add `algorithms::distance_transform` module with functions for calculating distance transforms
 - Add dependency on `chrono` crate for handling returned date types
 - Add `object::creation_datetime` function for determining the creation timestamp of objects

@@ -24,8 +24,9 @@ pub fn chebyshev_distance_transform_from_terrain(
 }
 
 /// Provides a Cost Matrix with values equal to the Chebyshev distance from any
-/// position in the provided initial Cost Matrix with a value set to 0. This
-/// allows for calculating the distance transform from an arbitrary set of
+/// position in the provided initial Cost Matrix with a value set to 0.
+///
+/// This allows for calculating the distance transform from an arbitrary set of
 /// positions. Other position values in the initial Cost Matrix should be
 /// initialized to 255 (u8::MAX) to ensure the calculations work correctly.
 pub fn chebyshev_distance_transform_from_cost_matrix(

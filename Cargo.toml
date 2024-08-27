@@ -1,6 +1,6 @@
 [package]
 name = "screeps-game-utils"
-version = "0.21.1"
+version = "0.22.0"
 authors = ["Shane Madden"]
 documentation = "https://docs.rs/screeps-game-utils/"
 edition = "2021"
@@ -23,8 +23,8 @@ name = "screeps_utils"
 all-features = true
 
 [dependencies]
-chrono = "0.4"
-screeps-game-api = "0.21"
+chrono = ">=0.4.20"
+screeps-game-api = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_with = "3.8.1"
