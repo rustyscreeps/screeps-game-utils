@@ -21,6 +21,8 @@ pub fn get_obstacles_lcm_from_terrain(room_terrain: &LocalRoomTerrain) -> LocalC
     obstacles
 }
 
+/// Generates a distance floodfill from origin positions.
+///
 /// Takes a Vec of origin locations to start the floodfill from, and a Cost
 /// Matrix of obstacles, and produces a `LargeCostMatrix` with distances for all
 /// positions that can be reached from the origin points.
@@ -103,6 +105,8 @@ pub fn numerical_floodfill(
     output_cm
 }
 
+/// Generates a reachability floodfill from origin positions.
+///
 /// Takes a Vec of origin locations to start the floodfill from, and a Cost
 /// Matrix of obstacles, and produces a Cost Matrix with 1 values for all
 /// positions that can be reached from the origin points, and 0 values
