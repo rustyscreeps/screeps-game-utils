@@ -134,7 +134,7 @@ impl DoubleEndedIterator for PairIter {
             // self.forward.0 < self.backward.0, meaning we can
             // decrement by 1.
             self.backward = (
-                unsafe { RoomCoordinate::unchecked_new(self.backward.0.u8() + 1) },
+                unsafe { RoomCoordinate::unchecked_new(self.backward.0.u8() - 1) },
                 self.b_max,
             );
         } else {
