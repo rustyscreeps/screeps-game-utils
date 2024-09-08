@@ -279,13 +279,15 @@ pub fn grid_iter(top_left: RoomXY, bottom_right: RoomXY, order: Order) -> GridIt
 
 pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(50) as i8;
-    (-signed_radius..=signed_radius)
-        .filter_map(move |x| centre.x.checked_add(x))
-        .flat_map(move |x| {
-            (-signed_radius..=signed_radius)
-                .filter_map(move |y| centre.y.checked_add(y))
-                .map(move |y| RoomXY { x, y })
-        })
+    let top_left = RoomXY {
+        x: centre.x.saturating_add(-signed_radius),
+        y: centre.y.saturating_add(-signed_radius)
+    };
+    let bottom_right = RoomXY {
+        x: centre.x.saturating_add(signed_radius),
+        y: centre.y.saturating_add(signed_radius)
+    };
+    GridIter::new(top_left, bottom_right, Order::RowMajor)
 }
 
 pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
