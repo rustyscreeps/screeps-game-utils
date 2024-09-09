@@ -1,6 +1,7 @@
 use screeps::local::RoomCoordinate;
 
-/// Iterate over the range of [`RoomCoordinate`]s from `a` to `b`, including both endpoints.
+/// Iterate over the range of [`RoomCoordinate`]s from `a` to `b`, including
+/// both endpoints.
 ///
 /// Safe to call even when `a > b`, will just yield an empty range.
 ///
@@ -10,9 +11,12 @@ use screeps::local::RoomCoordinate;
 /// use screeps::local::RoomCoordinate;
 /// use screeps_utils::room_coordinate::range_inclusive;
 ///
-/// let coords: Vec<u8> = range_inclusive(RoomCoordinate::new(0).unwrap(), RoomCoordinate::new(10).unwrap())
-///     .map(|coord| coord.u8())
-///     .collect();
+/// let coords: Vec<u8> = range_inclusive(
+///     RoomCoordinate::new(0).unwrap(),
+///     RoomCoordinate::new(10).unwrap(),
+/// )
+/// .map(|coord| coord.u8())
+/// .collect();
 /// assert_eq!(coords, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10_u8]);
 /// ```
 pub fn range_inclusive(
@@ -23,7 +27,8 @@ pub fn range_inclusive(
     (a.u8()..=b.u8()).map(|x| unsafe { RoomCoordinate::unchecked_new(x) })
 }
 
-/// Iterate over the range of [`RoomCoordinates`]s from `a` to `b`, excluding both endpoints.
+/// Iterate over the range of [`RoomCoordinates`]s from `a` to `b`, excluding
+/// both endpoints.
 ///
 /// Safe to call even when `a >= b`, will just yield an empty range.
 ///
@@ -33,15 +38,21 @@ pub fn range_inclusive(
 /// use screeps::local::RoomCoordinate;
 /// use screeps_utils::room_coordinate::range_exclusive;
 ///
-/// let coords: Vec<u8> = range_exclusive(RoomCoordinate::new(0).unwrap(), RoomCoordinate::new(10).unwrap())
-///     .map(|coord| coord.u8())
-///     .collect();
+/// let coords: Vec<u8> = range_exclusive(
+///     RoomCoordinate::new(0).unwrap(),
+///     RoomCoordinate::new(10).unwrap(),
+/// )
+/// .map(|coord| coord.u8())
+/// .collect();
 /// assert_eq!(coords, [1, 2, 3, 4, 5, 6, 7, 8, 9_u8]);
 ///
 /// // Works for empty ranges too.
-/// let coords: Vec<u8> = range_exclusive(RoomCoordinate::new(0).unwrap(), RoomCoordinate::new(1).unwrap())
-///     .map(|coord| coord.u8())
-///     .collect();
+/// let coords: Vec<u8> = range_exclusive(
+///     RoomCoordinate::new(0).unwrap(),
+///     RoomCoordinate::new(1).unwrap(),
+/// )
+/// .map(|coord| coord.u8())
+/// .collect();
 /// assert!(coords.is_empty());
 /// ```
 pub fn range_exclusive(

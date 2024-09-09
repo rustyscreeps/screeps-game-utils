@@ -4,7 +4,8 @@ use screeps::{RoomCoordinate, RoomXY};
 
 use crate::room_coordinate::{range_exclusive, range_inclusive};
 
-// An iterator over ordered pairs of RoomCoordinates; first coordinate is the major axis.
+// An iterator over ordered pairs of RoomCoordinates; first coordinate is the
+// major axis.
 #[derive(Debug, Clone)]
 struct PairIter {
     // SAFETY INVARIANT: forward.1 and backward.1 are within b_min..=b_max when !done
@@ -43,7 +44,8 @@ impl Iterator for PairIter {
         if self.forward == self.backward {
             self.done = true;
         } else if self.forward.1 == self.b_max {
-            // SAFETY: self.backward.1 <= self.b_max, so self.forward.0 < self.backward.0, meaning we can increment by 1.
+            // SAFETY: self.backward.1 <= self.b_max, so self.forward.0 < self.backward.0,
+            // meaning we can increment by 1.
             self.forward = (
                 unsafe { RoomCoordinate::unchecked_new(self.forward.0.u8() + 1) },
                 self.b_min,
@@ -145,7 +147,8 @@ impl DoubleEndedIterator for PairIter {
         if self.backward == self.forward {
             self.done = true;
         } else if self.backward.1 == self.b_min {
-            // SAFETY: self.forward.1 >= self.b_min, so self.forward.0 < self.backward.0, meaning we can decrement by 1.
+            // SAFETY: self.forward.1 >= self.b_min, so self.forward.0 < self.backward.0,
+            // meaning we can decrement by 1.
             self.backward = (
                 unsafe { RoomCoordinate::unchecked_new(self.backward.0.u8() - 1) },
                 self.b_max,
@@ -209,8 +212,8 @@ impl DoubleEndedIterator for PairIter {
     }
 }
 
-/// An enum for controlling the iteration order of a [`GridIter`]. Thinking of a [`GridIter`]
-/// as a nested for-loop, `XMajor` would correspond to
+/// An enum for controlling the iteration order of a [`GridIter`]. Thinking of a
+/// [`GridIter`] as a nested for-loop, `XMajor` would correspond to
 ///
 /// ```
 /// for x in 0..=10 {
@@ -243,18 +246,19 @@ pub struct GridIter {
 }
 
 impl GridIter {
-    /// Creates a `GridIter` over the rectangular grid of `RoomXY` specified by the top-left
-    /// and bottom-right corners provided. Will determine whether to iterate `x` or `y` first
-    /// using the passed-in [`Order`].
+    /// Creates a `GridIter` over the rectangular grid of `RoomXY` specified by
+    /// the top-left and bottom-right corners provided. Will determine
+    /// whether to iterate `x` or `y` first using the passed-in [`Order`].
     ///
-    /// It is safe to pass in invalid corner specifications (e.g. `top_left.x > bottom_right.x`),
-    /// the returned `GridIter` will be immediately completed.
+    /// It is safe to pass in invalid corner specifications (e.g. `top_left.x >
+    /// bottom_right.x`), the returned `GridIter` will be immediately
+    /// completed.
     ///
     /// # Example
     ///
     /// ```
+    /// use screeps::local::{RoomCoordinate, RoomXY};
     /// use screeps_utils::room_xy::{GridIter, Order};
-    /// use screeps::local::{RoomXY, RoomCoordinate};
     ///
     /// for xy in GridIter::new(
     ///     RoomXY {
@@ -265,7 +269,7 @@ impl GridIter {
     ///         x: RoomCoordinate::new(1).unwrap(),
     ///         y: RoomCoordinate::new(2).unwrap(),
     ///     },
-    ///     Order::XMajor
+    ///     Order::XMajor,
     /// ) {
     ///     // Will print (x: 0, y: 0), then (x: 0, y: 1), (x: 0, y: 2), (x: 1, y: 0), etc.
     ///     println!("{:?}", xy);
@@ -350,14 +354,15 @@ impl DoubleEndedIterator for GridIter {
     }
 }
 
-/// Creates an iterator over all [`RoomXY`] around the designated centre (including the centre)
-/// within the given [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance).
-/// This is the same distance measure used for attack ranges, or for road lengths between two points, etc.
+/// Creates an iterator over all [`RoomXY`] around the designated centre
+/// (including the centre) within the given [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance).
+/// This is the same distance measure used for attack ranges, or for road
+/// lengths between two points, etc.
 ///
 /// # Iteration order
 ///
-/// The order over which points are iterated within the range is unspecified, and may change
-/// at any time.
+/// The order over which points are iterated within the range is unspecified,
+/// and may change at any time.
 pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(50) as i8;
     let top_left = RoomXY {
@@ -371,14 +376,15 @@ pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
     GridIter::new(top_left, bottom_right, Order::YMajor)
 }
 
-/// Creates an iterator over all [`RoomXY`] around the designated centre (including the centre)
-/// within the given [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry).
-/// This would be used for, e.g., measuring the number of walls needed between 2 points.
+/// Creates an iterator over all [`RoomXY`] around the designated centre
+/// (including the centre) within the given [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry).
+/// This would be used for, e.g., measuring the number of walls needed between 2
+/// points.
 ///
 /// # Iteration order
 ///
-/// The order over which points are iterated within the range is unspecified, and may change
-/// at any time.
+/// The order over which points are iterated within the range is unspecified,
+/// and may change at any time.
 pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(100) as i8;
     let min_x = centre.x.saturating_add(-signed_radius);
