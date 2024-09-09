@@ -356,6 +356,7 @@ impl DoubleEndedIterator for GridIter {
 
 /// Creates an iterator over all [`RoomXY`] around the designated centre
 /// (including the centre) within the given [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance).
+///
 /// This is the same distance measure used for attack ranges, or for road
 /// lengths between two points, etc.
 ///
@@ -378,6 +379,7 @@ pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
 
 /// Creates an iterator over all [`RoomXY`] around the designated centre
 /// (including the centre) within the given [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry).
+///
 /// This would be used for, e.g., measuring the number of walls needed between 2
 /// points.
 ///

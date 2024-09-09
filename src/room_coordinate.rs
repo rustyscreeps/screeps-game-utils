@@ -27,7 +27,7 @@ pub fn range_inclusive(
     (a.u8()..=b.u8()).map(|x| unsafe { RoomCoordinate::unchecked_new(x) })
 }
 
-/// Iterate over the range of [`RoomCoordinates`]s from `a` to `b`, excluding
+/// Iterate over the range of [`RoomCoordinate`]s from `a` to `b`, excluding
 /// both endpoints.
 ///
 /// Safe to call even when `a >= b`, will just yield an empty range.
