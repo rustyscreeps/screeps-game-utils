@@ -70,36 +70,45 @@ impl Iterator for PairIter {
             return init;
         }
 
+        #[cold]
+        fn cold_call<B>(
+            this: PairIter,
+            init: B,
+            mut f: impl FnMut(B, <PairIter as Iterator>::Item) -> B,
+        ) -> B {
+            if this.forward.0 == this.backward.0 {
+                return range_inclusive(this.forward.1, this.backward.1)
+                    .map(|b| (this.forward.0, b))
+                    .fold(init, f);
+            }
+
+            let forward_partial_acc = range_inclusive(this.forward.1, this.b_max)
+                .map(|b| (this.forward.0, b))
+                .fold(init, &mut f);
+
+            let middle_partials_acc = range_exclusive(this.forward.0, this.backward.0).fold(
+                forward_partial_acc,
+                |inner_acc, a| {
+                    range_inclusive(this.b_min, this.b_max)
+                        .map(|b| (a, b))
+                        .fold(inner_acc, &mut f)
+                },
+            );
+
+            range_inclusive(this.b_min, this.backward.1)
+                .map(|b| (this.backward.0, b))
+                .fold(middle_partials_acc, f)
+        }
+
         if self.forward.1 == self.b_min && self.backward.1 == self.b_max {
-            return range_inclusive(self.forward.0, self.backward.0).fold(init, |acc, a| {
+            range_inclusive(self.forward.0, self.backward.0).fold(init, |acc, a| {
                 range_inclusive(self.b_min, self.b_max)
                     .map(|b| (a, b))
                     .fold(acc, &mut f)
-            });
+            })
+        } else {
+            cold_call(self, init, f)
         }
-
-        if self.forward.0 == self.backward.0 {
-            return range_inclusive(self.forward.1, self.backward.1)
-                .map(|b| (self.forward.0, b))
-                .fold(init, f);
-        }
-
-        let forward_partial_acc = range_inclusive(self.forward.1, self.b_max)
-            .map(|b| (self.forward.0, b))
-            .fold(init, &mut f);
-
-        let middle_partials_acc = range_exclusive(self.forward.0, self.backward.0).fold(
-            forward_partial_acc,
-            |inner_acc, a| {
-                range_inclusive(self.b_min, self.b_max)
-                    .map(|b| (a, b))
-                    .fold(inner_acc, &mut f)
-            },
-        );
-
-        range_inclusive(self.b_min, self.backward.1)
-            .map(|b| (self.backward.0, b))
-            .fold(middle_partials_acc, f)
     }
 }
 
@@ -158,36 +167,45 @@ impl DoubleEndedIterator for PairIter {
             return init;
         }
 
+        #[cold]
+        fn cold_call<B>(
+            this: PairIter,
+            init: B,
+            mut f: impl FnMut(B, <PairIter as Iterator>::Item) -> B,
+        ) -> B {
+            if this.forward.0 == this.backward.0 {
+                return range_inclusive(this.forward.1, this.backward.1)
+                    .map(|b| (this.forward.0, b))
+                    .rfold(init, f);
+            }
+
+            let backward_partial_acc = range_inclusive(this.b_min, this.backward.1)
+                .map(|b| (this.backward.0, b))
+                .rfold(init, &mut f);
+
+            let middle_partials_acc = range_exclusive(this.forward.0, this.backward.0).rfold(
+                backward_partial_acc,
+                |inner_acc, a| {
+                    range_inclusive(this.b_min, this.b_max)
+                        .map(|b| (a, b))
+                        .rfold(inner_acc, &mut f)
+                },
+            );
+
+            range_inclusive(this.forward.1, this.b_max)
+                .map(|b| (this.forward.0, b))
+                .rfold(middle_partials_acc, f)
+        }
+
         if self.forward.1 == self.b_min && self.backward.1 == self.b_max {
-            return range_inclusive(self.forward.0, self.backward.0).rfold(init, |acc, a| {
+            range_inclusive(self.forward.0, self.backward.0).rfold(init, |acc, a| {
                 range_inclusive(self.b_min, self.b_max)
                     .map(|b| (a, b))
                     .rfold(acc, &mut f)
-            });
+            })
+        } else {
+            cold_call(self, init, f)
         }
-
-        if self.forward.0 == self.backward.0 {
-            return range_inclusive(self.forward.1, self.backward.1)
-                .map(|b| (self.forward.0, b))
-                .rfold(init, f);
-        }
-
-        let backward_partial_acc = range_inclusive(self.b_min, self.backward.1)
-            .map(|b| (self.backward.0, b))
-            .rfold(init, &mut f);
-
-        let middle_partials_acc = range_exclusive(self.forward.0, self.backward.0).rfold(
-            backward_partial_acc,
-            |inner_acc, a| {
-                range_inclusive(self.b_min, self.b_max)
-                    .map(|b| (a, b))
-                    .rfold(inner_acc, &mut f)
-            },
-        );
-
-        range_inclusive(self.forward.1, self.b_max)
-            .map(|b| (self.forward.0, b))
-            .rfold(middle_partials_acc, f)
     }
 }
 
