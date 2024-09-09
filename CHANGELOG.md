@@ -1,6 +1,8 @@
 Unreleased
 ==========
 
+- Add iterators over various `RoomXY` and `RoomCoordinate` ranges
+
 0.22.0 (2024-08-27)
 ===================
 
