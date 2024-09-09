@@ -183,8 +183,8 @@ impl DoubleEndedIterator for PairIter {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Order {
-    ColumnMajor,
-    RowMajor,
+    XMajor,
+    YMajor,
 }
 
 #[derive(Debug, Clone)]
@@ -200,8 +200,8 @@ impl GridIter {
         let left = top_left.x;
         let right = bottom_right.x;
         let (a_min, a_max, b_min, b_max) = match order {
-            Order::ColumnMajor => (left, right, top, bottom),
-            Order::RowMajor => (top, bottom, left, right),
+            Order::XMajor => (left, right, top, bottom),
+            Order::YMajor => (top, bottom, left, right),
         };
         Self {
             inner: PairIter::new((a_min, b_min), (a_max, b_max)),
@@ -211,8 +211,8 @@ impl GridIter {
 
     fn get_xy(&self, a: RoomCoordinate, b: RoomCoordinate) -> RoomXY {
         match self.order {
-            Order::ColumnMajor => RoomXY { x: a, y: b },
-            Order::RowMajor => RoomXY { x: b, y: a },
+            Order::XMajor => RoomXY { x: a, y: b },
+            Order::YMajor => RoomXY { x: b, y: a },
         }
     }
 }
@@ -234,10 +234,10 @@ impl Iterator for GridIter {
         F: FnMut(B, Self::Item) -> B,
     {
         match self.order {
-            Order::ColumnMajor => self
+            Order::XMajor => self
                 .inner
                 .fold(init, move |acc, (x, y)| f(acc, RoomXY { x, y })),
-            Order::RowMajor => self
+            Order::YMajor => self
                 .inner
                 .fold(init, move |acc, (y, x)| f(acc, RoomXY { x, y })),
         }
@@ -263,10 +263,10 @@ impl DoubleEndedIterator for GridIter {
         F: FnMut(B, Self::Item) -> B,
     {
         match self.order {
-            Order::ColumnMajor => self
+            Order::XMajor => self
                 .inner
                 .rfold(init, move |acc, (x, y)| f(acc, RoomXY { x, y })),
-            Order::RowMajor => self
+            Order::YMajor => self
                 .inner
                 .rfold(init, move |acc, (y, x)| f(acc, RoomXY { x, y })),
         }
@@ -287,7 +287,7 @@ pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
         x: centre.x.saturating_add(signed_radius),
         y: centre.y.saturating_add(signed_radius),
     };
-    GridIter::new(top_left, bottom_right, Order::RowMajor)
+    GridIter::new(top_left, bottom_right, Order::YMajor)
 }
 
 pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
