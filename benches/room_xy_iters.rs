@@ -3,7 +3,6 @@ extern crate test;
 
 #[cfg(test)]
 mod benches {
-    use chrono::Local;
     use screeps::local::{LocalCostMatrix, RoomCoordinate, RoomXY};
     use screeps_utils::{room_coordinate::*, room_xy::*};
     use test::{black_box, Bencher};
