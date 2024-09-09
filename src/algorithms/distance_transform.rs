@@ -35,7 +35,6 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
     let one = RoomCoordinate::new(1).unwrap();
     let forty_eight = RoomCoordinate::new(ROOM_SIZE - 2).unwrap();
     let forty_nine = RoomCoordinate::new(ROOM_SIZE - 1).unwrap();
-    let windowing_vec: Vec<_> = range_inclusive(zero, forty_nine).collect();
     // Pass 1: Top-to-Bottom, Left-to-Right
 
     // Phase A: first column
@@ -69,12 +68,18 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                 initial_top,
             );
             let final_top = range_exclusive(zero, forty_nine)
-                .map(|y| RoomXY { x: current_x, y })
-                .zip(windowing_vec.windows(3))
+                .map(|y| {
+                    (RoomXY { x: current_x, y }, unsafe {
+                        [
+                            RoomCoordinate::unchecked_new(y.u8() - 1),
+                            y,
+                            RoomCoordinate::unchecked_new(y.u8() + 1),
+                        ]
+                    })
+                })
                 .fold(initial_top, |top, (current_xy, lefts)| {
                     let val = lefts
-                        .iter()
-                        .copied()
+                        .into_iter()
                         .map(|y| RoomXY { x: left_x, y })
                         .map(|xy| cm.get(xy))
                         .min()
@@ -155,13 +160,18 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                 initial_bottom,
             );
             let final_bottom = range_exclusive(zero, forty_nine)
-                .rev()
-                .map(|y| RoomXY { x: current_x, y })
-                .zip(windowing_vec.windows(3).rev())
-                .fold(initial_bottom, |bottom, (current_xy, rights)| {
+                .map(|y| {
+                    (RoomXY { x: current_x, y }, unsafe {
+                        [
+                            RoomCoordinate::unchecked_new(y.u8() - 1),
+                            y,
+                            RoomCoordinate::unchecked_new(y.u8() + 1),
+                        ]
+                    })
+                })
+                .rfold(initial_bottom, |bottom, (current_xy, rights)| {
                     let val = rights
-                        .iter()
-                        .copied()
+                        .into_iter()
                         .map(|y| RoomXY { x: right_x, y })
                         .map(|xy| cm.get(xy))
                         .min()
