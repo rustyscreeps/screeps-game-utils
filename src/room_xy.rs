@@ -486,7 +486,7 @@ mod test {
     }
 
     #[test]
-    fn test_grid_xmajor() {
+    fn test_grid_iter_basic() {
         let mut iter = GridIter::new(make_xy(0, 0), make_xy(1, 1), Order::XMajor);
         assert_eq!(make_xy(0, 0), iter.next().unwrap());
         assert_eq!(make_xy(0, 1), iter.next().unwrap());
@@ -517,5 +517,99 @@ mod test {
         assert_eq!(make_xy(1, 0), iter.next_back().unwrap());
         assert_eq!(make_xy(0, 0), iter.next_back().unwrap());
         assert_eq!(None, iter.next_back());
+    }
+
+    #[test]
+    fn test_grid_iter_len() {
+        let mut iter = GridIter::new(make_xy(0, 0), make_xy(2, 1), Order::XMajor);
+        for i in (1..=6).rev() {
+            assert_eq!(iter.len(), i);
+            iter.next().unwrap();
+        }
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next(), None);
+
+        iter = GridIter::new(make_xy(0, 0), make_xy(2, 1), Order::XMajor);
+        for i in (1..=6).rev() {
+            assert_eq!(iter.len(), i);
+            iter.next_back().unwrap();
+        }
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next_back(), None);
+    }
+
+    #[test]
+    fn test_grid_iter_bad_corners() {
+        let mut iter = GridIter::new(make_xy(10, 10), make_xy(10, 9), Order::XMajor);
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next(), None);
+
+        iter = GridIter::new(make_xy(10, 10), make_xy(9, 10), Order::XMajor);
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next(), None);
+
+        iter = GridIter::new(make_xy(10, 10), make_xy(9, 9), Order::XMajor);
+        assert_eq!(iter.len(), 0);
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_grid_iter_single_square() {
+        let coords: Vec<_> =
+            GridIter::new(make_xy(25, 25), make_xy(25, 25), Order::XMajor).collect();
+        assert_eq!(coords, [make_xy(25, 25)]);
+    }
+
+    #[test]
+    fn test_grid_iter_mixing_forward_and_back() {
+        let mut iter = GridIter::new(make_xy(0, 0), make_xy(2, 1), Order::XMajor);
+        assert_eq!(iter.next().unwrap(), make_xy(0, 0));
+        assert_eq!(iter.next_back().unwrap(), make_xy(2, 1));
+        assert_eq!(iter.next_back().unwrap(), make_xy(2, 0));
+        assert_eq!(iter.next().unwrap(), make_xy(0, 1));
+        assert_eq!(iter.next().unwrap(), make_xy(1, 0));
+        assert_eq!(iter.next_back().unwrap(), make_xy(1, 1));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_grid_iter_fold() {
+        let expected = [
+            make_xy(0, 0),
+            make_xy(0, 1),
+            make_xy(0, 2),
+            make_xy(1, 0),
+            make_xy(1, 1),
+            make_xy(1, 2),
+        ];
+        let actual = GridIter::new(make_xy(0, 0), make_xy(1, 2), Order::XMajor).fold(
+            Vec::new(),
+            |mut v, xy| {
+                v.push(xy);
+                v
+            },
+        );
+        assert_eq!(expected.as_slice(), actual);
+    }
+
+    #[test]
+    fn test_grid_iter_rfold() {
+        let expected = [
+            make_xy(1, 2),
+            make_xy(0, 2),
+            make_xy(1, 1),
+            make_xy(0, 1),
+            make_xy(1, 0),
+            make_xy(0, 0),
+        ];
+        let actual = GridIter::new(make_xy(0, 0), make_xy(1, 2), Order::YMajor).rfold(
+            Vec::new(),
+            |mut v, xy| {
+                v.push(xy);
+                v
+            },
+        );
+        assert_eq!(expected.as_slice(), actual);
     }
 }
