@@ -4,13 +4,13 @@ use screeps::{RoomCoordinate, RoomXY};
 
 use crate::room_coordinate::{range_exclusive, range_inclusive};
 
+// An iterator over ordered pairs of RoomCoordinates; first coordinate is the major axis.
 #[derive(Debug, Clone)]
 struct PairIter {
-    // SAFETY INVARIANT: forward.1 and backward.1 are within
-    // b_min..=b_max at all times
+    // SAFETY INVARIANT: forward.1 and backward.1 are within b_min..=b_max when !done
     b_min: RoomCoordinate,
     b_max: RoomCoordinate,
-    // SAFETY INVARIANT: forward <= backward at all times
+    // SAFETY INVARIANT: forward <= backward, by lex order, when !done
     forward: (RoomCoordinate, RoomCoordinate),
     backward: (RoomCoordinate, RoomCoordinate),
     done: bool,
@@ -23,6 +23,8 @@ impl PairIter {
             b_max: max.1,
             forward: min,
             backward: max,
+            // SAFETY INVARIANT: if this is false, then the b_min/b_max criterion is true,
+            // and max (backward) is lex-order >= min (forward).
             done: max.0 < min.0 || max.1 < min.1,
         }
     }
@@ -71,6 +73,14 @@ impl Iterator for PairIter {
             return init;
         }
 
+        if self.forward.1 == self.b_min && self.backward.1 == self.b_max {
+            return range_inclusive(self.forward.0, self.backward.0).fold(init, |acc, a| {
+                range_inclusive(self.b_min, self.b_max)
+                    .map(|b| (a, b))
+                    .fold(acc, &mut f)
+            });
+        }
+
         if self.forward.0 == self.backward.0 {
             return range_inclusive(self.forward.1, self.backward.1)
                 .map(|b| (self.forward.0, b))
@@ -81,15 +91,14 @@ impl Iterator for PairIter {
             .map(|b| (self.forward.0, b))
             .fold(init, &mut f);
 
-        let middle_partials_acc = range_exclusive(
-            unsafe { RoomCoordinate::unchecked_new(self.forward.0.u8() + 1) },
-            self.backward.0,
-        )
-        .fold(forward_partial_acc, |inner_acc, a| {
-            range_inclusive(self.b_min, self.b_max)
-                .map(|b| (a, b))
-                .fold(inner_acc, &mut f)
-        });
+        let middle_partials_acc = range_exclusive(self.forward.0, self.backward.0).fold(
+            forward_partial_acc,
+            |inner_acc, a| {
+                range_inclusive(self.b_min, self.b_max)
+                    .map(|b| (a, b))
+                    .fold(inner_acc, &mut f)
+            },
+        );
 
         range_inclusive(self.b_min, self.backward.1)
             .map(|b| (self.backward.0, b))
@@ -155,6 +164,14 @@ impl DoubleEndedIterator for PairIter {
             return init;
         }
 
+        if self.forward.1 == self.b_min && self.backward.1 == self.b_max {
+            return range_inclusive(self.forward.0, self.backward.0).rfold(init, |acc, a| {
+                range_inclusive(self.b_min, self.b_max)
+                    .map(|b| (a, b))
+                    .rfold(acc, &mut f)
+            });
+        }
+
         if self.forward.0 == self.backward.0 {
             return range_inclusive(self.forward.1, self.backward.1)
                 .map(|b| (self.forward.0, b))
@@ -165,15 +182,14 @@ impl DoubleEndedIterator for PairIter {
             .map(|b| (self.backward.0, b))
             .rfold(init, &mut f);
 
-        let middle_partials_acc = range_exclusive(
-            unsafe { RoomCoordinate::unchecked_new(self.forward.0.u8() + 1) },
-            self.backward.0,
-        )
-        .rfold(backward_partial_acc, |inner_acc, a| {
-            range_inclusive(self.b_min, self.b_max)
-                .map(|b| (a, b))
-                .rfold(inner_acc, &mut f)
-        });
+        let middle_partials_acc = range_exclusive(self.forward.0, self.backward.0).rfold(
+            backward_partial_acc,
+            |inner_acc, a| {
+                range_inclusive(self.b_min, self.b_max)
+                    .map(|b| (a, b))
+                    .rfold(inner_acc, &mut f)
+            },
+        );
 
         range_inclusive(self.forward.0, self.b_max)
             .map(|b| (self.forward.0, b))
@@ -181,12 +197,33 @@ impl DoubleEndedIterator for PairIter {
     }
 }
 
+/// An enum for controlling the iteration order of a [`GridIter`]. Thinking of a [`GridIter`]
+/// as a nested for-loop, XMajor would correspond to
+///
+/// ```
+/// for x in 0..=10 {
+///     for y in 0..=10 {
+///         // Do things
+///     }
+/// }
+/// ```
+///
+/// whereas YMajor would coorespond to
+///
+/// ```
+/// for y in 0..=10 {
+///     for x in 0..=10 {
+///         // Do things
+///     }
+/// }
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Order {
     XMajor,
     YMajor,
 }
 
+/// An iterator over a grid of [`RoomXY`], inclusive of the boundary edges.
 #[derive(Debug, Clone)]
 pub struct GridIter {
     inner: PairIter,
@@ -194,6 +231,34 @@ pub struct GridIter {
 }
 
 impl GridIter {
+    /// Creates a `GridIter` over the rectangular grid of `RoomXY` specified by the top-left
+    /// and bottom-right corners provided. Will determine whether to iterate `x` or `y` first
+    /// using the passed-in [`Order`].
+    ///
+    /// It is safe to pass in invalid corner specifications (e.g. `top_left.x > bottom_right.x`),
+    /// the returned `GridIter` will be immediately completed.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use screeps_utils::room_xy::{GridIter, Order};
+    /// use screeps::local::{RoomXY, RoomCoordinate};
+    ///
+    /// for xy in GridIter::new(
+    ///     RoomXY {
+    ///         x: RoomCoordinate::new(0).unwrap(),
+    ///         y: RoomCoordinate::new(0).unwrap(),
+    ///     },
+    ///     RoomXY {
+    ///         x: RoomCoordinate::new(1).unwrap(),
+    ///         y: RoomCoordinate::new(2).unwrap(),
+    ///     },
+    ///     Order::XMajor
+    /// ) {
+    ///     // Will print (x: 0, y: 0), then (x: 0, y: 1), (x: 0, y: 2), (x: 1, y: 0), etc.
+    ///     println!("{:?}", xy);
+    /// }
+    /// ```
     pub fn new(top_left: RoomXY, bottom_right: RoomXY, order: Order) -> Self {
         let top = top_left.y;
         let bottom = bottom_right.y;
@@ -273,10 +338,14 @@ impl DoubleEndedIterator for GridIter {
     }
 }
 
-pub fn grid_iter(top_left: RoomXY, bottom_right: RoomXY, order: Order) -> GridIter {
-    GridIter::new(top_left, bottom_right, order)
-}
-
+/// Creates an iterator over all [`RoomXY`] around the designated centre (including the centre)
+/// within the given [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance).
+/// This is the same distance measure used for attack ranges, or for road lengths between two points, etc.
+///
+/// # Iteration order
+///
+/// The order over which points are iterated within the range is unspecified, and may change
+/// at any time.
 pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(50) as i8;
     let top_left = RoomXY {
@@ -290,6 +359,14 @@ pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
     GridIter::new(top_left, bottom_right, Order::YMajor)
 }
 
+/// Creates an iterator over all [`RoomXY`] around the designated centre (including the centre)
+/// within the given [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry).
+/// This would be used for, e.g., measuring the number of walls needed between 2 points.
+///
+/// # Iteration order
+///
+/// The order over which points are iterated within the range is unspecified, and may change
+/// at any time.
 pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(100) as i8;
     let min_x = centre.x.saturating_add(-signed_radius);
@@ -309,4 +386,136 @@ pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use std::collections::HashSet;
+
+    fn make_xy(x: u8, y: u8) -> RoomXY {
+        RoomXY {
+            x: RoomCoordinate::new(x).unwrap(),
+            y: RoomCoordinate::new(y).unwrap(),
+        }
+    }
+
+    #[test]
+    fn test_chebyshev_basic() {
+        let expected: HashSet<_> = [
+            make_xy(10, 10),
+            make_xy(9, 10),
+            make_xy(9, 9),
+            make_xy(9, 11),
+            make_xy(10, 9),
+            make_xy(10, 11),
+            make_xy(11, 9),
+            make_xy(11, 10),
+            make_xy(11, 11),
+        ]
+        .into_iter()
+        .collect();
+        let actual: HashSet<_> = chebyshev_range_iter(make_xy(10, 10), 1).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_chebyshev_0_radius() {
+        let expected: HashSet<_> = [make_xy(11, 11)].into_iter().collect();
+        let actual: HashSet<_> = chebyshev_range_iter(make_xy(11, 11), 0).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_chebyshev_boundary() {
+        let expected: HashSet<_> = [
+            make_xy(0, 0),
+            make_xy(0, 1),
+            make_xy(0, 2),
+            make_xy(1, 0),
+            make_xy(1, 1),
+            make_xy(1, 2),
+            make_xy(2, 0),
+            make_xy(2, 1),
+            make_xy(2, 2),
+        ]
+        .into_iter()
+        .collect();
+        let actual: HashSet<_> = chebyshev_range_iter(make_xy(0, 0), 2).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_manhattan_basic() {
+        let expected: HashSet<_> = [
+            make_xy(9, 10),
+            make_xy(10, 10),
+            make_xy(11, 10),
+            make_xy(10, 9),
+            make_xy(10, 11),
+        ]
+        .into_iter()
+        .collect();
+        let actual: HashSet<_> = manhattan_range_iter(make_xy(10, 10), 1).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_manhattan_0_radius() {
+        let expected: HashSet<_> = [make_xy(10, 10)].into_iter().collect();
+        let actual: HashSet<_> = manhattan_range_iter(make_xy(10, 10), 0).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_manhattan_boundary() {
+        let expected: HashSet<_> = [
+            make_xy(0, 1),
+            make_xy(0, 2),
+            make_xy(0, 3),
+            make_xy(1, 0),
+            make_xy(1, 1),
+            make_xy(1, 2),
+            make_xy(1, 3),
+            make_xy(1, 4),
+            make_xy(2, 1),
+            make_xy(2, 2),
+            make_xy(2, 3),
+            make_xy(3, 2),
+        ]
+        .into_iter()
+        .collect();
+        let actual: HashSet<_> = manhattan_range_iter(make_xy(1, 2), 2).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_grid_xmajor() {
+        let mut iter = GridIter::new(make_xy(0, 0), make_xy(1, 1), Order::XMajor);
+        assert_eq!(make_xy(0, 0), iter.next().unwrap());
+        assert_eq!(make_xy(0, 1), iter.next().unwrap());
+        assert_eq!(make_xy(1, 0), iter.next().unwrap());
+        assert_eq!(make_xy(1, 1), iter.next().unwrap());
+        assert_eq!(None, iter.next());
+
+        iter = GridIter::new(make_xy(0, 0), make_xy(1, 1), Order::YMajor);
+        assert_eq!(make_xy(0, 0), iter.next().unwrap());
+        assert_eq!(make_xy(1, 0), iter.next().unwrap());
+        assert_eq!(make_xy(0, 1), iter.next().unwrap());
+        assert_eq!(make_xy(1, 1), iter.next().unwrap());
+        assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn test_grid_iter_reverse() {
+        let mut iter = GridIter::new(make_xy(0, 0), make_xy(1, 1), Order::XMajor);
+        assert_eq!(make_xy(1, 1), iter.next_back().unwrap());
+        assert_eq!(make_xy(1, 0), iter.next_back().unwrap());
+        assert_eq!(make_xy(0, 1), iter.next_back().unwrap());
+        assert_eq!(make_xy(0, 0), iter.next_back().unwrap());
+        assert_eq!(None, iter.next_back());
+
+        iter = GridIter::new(make_xy(0, 0), make_xy(1, 1), Order::YMajor);
+        assert_eq!(make_xy(1, 1), iter.next_back().unwrap());
+        assert_eq!(make_xy(0, 1), iter.next_back().unwrap());
+        assert_eq!(make_xy(1, 0), iter.next_back().unwrap());
+        assert_eq!(make_xy(0, 0), iter.next_back().unwrap());
+        assert_eq!(None, iter.next_back());
+    }
 }
