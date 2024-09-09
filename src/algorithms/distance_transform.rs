@@ -2,8 +2,7 @@
 
 use screeps::{
     constants::extra::ROOM_SIZE,
-    local::{LocalCostMatrix, LocalRoomTerrain, RoomXY},
-    RoomCoordinate,
+    local::{LocalCostMatrix, LocalRoomTerrain, RoomCoordinate, RoomXY},
 };
 
 use crate::room_coordinate::{range_exclusive, range_inclusive};
