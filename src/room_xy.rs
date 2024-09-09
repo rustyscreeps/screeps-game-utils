@@ -185,7 +185,7 @@ impl DoubleEndedIterator for PairIter {
             },
         );
 
-        range_inclusive(self.forward.0, self.b_max)
+        range_inclusive(self.forward.1, self.b_max)
             .map(|b| (self.forward.0, b))
             .rfold(middle_partials_acc, f)
     }
@@ -604,6 +604,53 @@ mod test {
                 v
             },
         );
+        assert_eq!(expected.as_slice(), actual);
+    }
+
+    #[test]
+    fn test_grid_iter_single_row_fold() {
+        let mut base_iter = GridIter::new(make_xy(0, 0), make_xy(0, 10), Order::XMajor);
+        base_iter.next().unwrap();
+        base_iter.next_back().unwrap();
+        let expected: Vec<_> = (1..=9).map(|y| make_xy(0, y)).collect();
+        let actual = base_iter.clone().fold(Vec::new(), |mut v, xy| {
+            v.push(xy);
+            v
+        });
+        assert_eq!(expected, actual);
+
+        let expected: Vec<_> = (1..=9).rev().map(|y| make_xy(0, y)).collect();
+        let actual = base_iter.rfold(Vec::new(), |mut v, xy| {
+            v.push(xy);
+            v
+        });
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_grid_iter_fold_general_case() {
+        let mut base_iter = GridIter::new(make_xy(0, 0), make_xy(3, 1), Order::XMajor);
+        base_iter.next().unwrap();
+        base_iter.next_back().unwrap();
+        let mut expected = [
+            make_xy(0, 1),
+            make_xy(1, 0),
+            make_xy(1, 1),
+            make_xy(2, 0),
+            make_xy(2, 1),
+            make_xy(3, 0),
+        ];
+        let actual = base_iter.clone().fold(Vec::new(), |mut v, xy| {
+            v.push(xy);
+            v
+        });
+        assert_eq!(expected.as_slice(), actual);
+
+        expected.reverse();
+        let actual = base_iter.rfold(Vec::new(), |mut v, xy| {
+            v.push(xy);
+            v
+        });
         assert_eq!(expected.as_slice(), actual);
     }
 }
