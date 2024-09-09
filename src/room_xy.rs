@@ -43,16 +43,13 @@ impl Iterator for PairIter {
         if self.forward == self.backward {
             self.done = true;
         } else if self.forward.1 == self.b_max {
-            // SAFETY: self.backward.1 <= self.b_max, so
-            // self.forward.0 < self.backward.0, meaning we can
-            // increment by 1.
+            // SAFETY: self.backward.1 <= self.b_max, so self.forward.0 < self.backward.0, meaning we can increment by 1.
             self.forward = (
                 unsafe { RoomCoordinate::unchecked_new(self.forward.0.u8() + 1) },
                 self.b_min,
             );
         } else {
-            // SAFETY: self.forward.1 < self.b_max, so we can step
-            // up by 1.
+            // SAFETY: self.forward.1 < self.b_max, so we can step up by 1.
             self.forward.1 = unsafe { RoomCoordinate::unchecked_new(self.forward.1.u8() + 1) };
         }
 
@@ -139,16 +136,13 @@ impl DoubleEndedIterator for PairIter {
         if self.backward == self.forward {
             self.done = true;
         } else if self.backward.1 == self.b_min {
-            // SAFETY: self.forward.1 >= self.b_min, so
-            // self.forward.0 < self.backward.0, meaning we can
-            // decrement by 1.
+            // SAFETY: self.forward.1 >= self.b_min, so self.forward.0 < self.backward.0, meaning we can decrement by 1.
             self.backward = (
                 unsafe { RoomCoordinate::unchecked_new(self.backward.0.u8() - 1) },
                 self.b_max,
             );
         } else {
-            // SAFETY: self.backward.1 > self.b_min, so we can step
-            // down by 1.
+            // SAFETY: self.backward.1 > self.b_min, so we can step down by 1.
             self.backward.1 = unsafe { RoomCoordinate::unchecked_new(self.backward.1.u8() - 1) };
         }
 
@@ -198,7 +192,7 @@ impl DoubleEndedIterator for PairIter {
 }
 
 /// An enum for controlling the iteration order of a [`GridIter`]. Thinking of a [`GridIter`]
-/// as a nested for-loop, XMajor would correspond to
+/// as a nested for-loop, `XMajor` would correspond to
 ///
 /// ```
 /// for x in 0..=10 {
@@ -208,7 +202,7 @@ impl DoubleEndedIterator for PairIter {
 /// }
 /// ```
 ///
-/// whereas YMajor would coorespond to
+/// whereas `YMajor` would coorespond to
 ///
 /// ```
 /// for y in 0..=10 {
