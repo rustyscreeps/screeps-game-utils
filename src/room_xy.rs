@@ -257,7 +257,7 @@ impl DoubleEndedIterator for GridIter {
         self.inner.next_back().map(|(a, b)| self.get_xy(a, b))
     }
 
-    fn rfold<B, F>(mut self, init: B, mut f: F) -> B
+    fn rfold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Self::Item) -> B,
@@ -281,24 +281,28 @@ pub fn chebyshev_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = 
     let signed_radius = radius.min(50) as i8;
     let top_left = RoomXY {
         x: centre.x.saturating_add(-signed_radius),
-        y: centre.y.saturating_add(-signed_radius)
+        y: centre.y.saturating_add(-signed_radius),
     };
     let bottom_right = RoomXY {
         x: centre.x.saturating_add(signed_radius),
-        y: centre.y.saturating_add(signed_radius)
+        y: centre.y.saturating_add(signed_radius),
     };
     GridIter::new(top_left, bottom_right, Order::RowMajor)
 }
 
 pub fn manhattan_range_iter(centre: RoomXY, radius: u8) -> impl Iterator<Item = RoomXY> {
     let signed_radius = radius.min(100) as i8;
-    (-signed_radius..=signed_radius)
-        .filter_map(move |x| centre.x.checked_add(x).map(|x_coord| (x, x_coord)))
-        .flat_map(move |(x_offset, x)| {
-            let y_range = signed_radius - x_offset.abs();
-            (-y_range..=y_range)
-                .filter_map(move |y| centre.y.checked_add(y))
-                .map(move |y| RoomXY { x, y })
+    let min_x = centre.x.saturating_add(-signed_radius);
+    let min_x_offset = min_x.u8() as i8 - centre.x.u8() as i8;
+    let max_x = centre.x.saturating_add(signed_radius);
+    let max_x_offset = max_x.u8() as i8 - centre.x.u8() as i8;
+    range_inclusive(min_x, max_x)
+        .zip(min_x_offset..=max_x_offset)
+        .flat_map(move |(x, x_offset)| {
+            let y_radius = signed_radius - x_offset.abs();
+            let min_y = centre.y.saturating_add(-y_radius);
+            let max_y = centre.y.saturating_add(y_radius);
+            range_inclusive(min_y, max_y).map(move |y| RoomXY { x, y })
         })
 }
 
