@@ -10,12 +10,20 @@ mod benches {
     #[bench]
     fn bench_chebyshev_distance_transform(b: &mut Bencher) {
         let mut terrain = LocalRoomTerrain::new_from_bits(Box::new([0; 2500]));
-        b.iter(|| black_box(chebyshev_distance_transform_from_terrain(&*black_box(&mut terrain))));
+        b.iter(|| {
+            black_box(chebyshev_distance_transform_from_terrain(&*black_box(
+                &mut terrain,
+            )))
+        });
     }
 
     #[bench]
     fn bench_manhattan_distance_transform(b: &mut Bencher) {
         let mut terrain = LocalRoomTerrain::new_from_bits(Box::new([0; 2500]));
-        b.iter(|| black_box(manhattan_distance_transform_from_terrain(&*black_box(&mut terrain))));
+        b.iter(|| {
+            black_box(manhattan_distance_transform_from_terrain(&*black_box(
+                &mut terrain,
+            )))
+        });
     }
 }
