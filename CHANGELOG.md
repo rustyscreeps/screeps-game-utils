@@ -1,7 +1,11 @@
 Unreleased
 ==========
 
+0.22.1 (2024-09-30)
+===================
+
 - Add iterators over various `RoomXY` and `RoomCoordinate` ranges
+- Performance improvement for Chebyshev distance transform and add Manhattan distance transform
 
 0.22.0 (2024-08-27)
 ===================
