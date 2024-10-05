@@ -41,32 +41,43 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
     range_inclusive(one, forty_nine)
         .map(|y| RoomXY { x: zero, y })
         .fold(cm.get(RoomXY { x: zero, y: zero }), |top, xy| {
-            let val = cm.get(xy).min(top.saturating_add(1));
-            cm.set(xy, val);
-            val
+            let current = cm.get(xy);
+            match top.checked_add(1) {
+                Some(top_val) if top_val < current => {
+                    cm.set(xy, top_val);
+                    top_val
+                }
+                _ => current,
+            }
         });
 
     // Phase B: the rest
     range_inclusive(one, forty_nine)
-        .zip(range_inclusive(zero, forty_eight))
+        .map(|x| (x, unsafe { RoomCoordinate::unchecked_new(x.u8() - 1) }))
         .for_each(|(current_x, left_x)| {
-            let initial_top = cm
-                .get(RoomXY {
+            let initial_top = {
+                let current = cm.get(RoomXY {
                     x: current_x,
                     y: zero,
-                })
-                .min(
-                    cm.get(RoomXY { x: left_x, y: zero })
-                        .min(cm.get(RoomXY { x: left_x, y: one }))
-                        .saturating_add(1),
-                );
-            cm.set(
-                RoomXY {
-                    x: current_x,
-                    y: zero,
-                },
-                initial_top,
-            );
+                });
+                match cm
+                    .get(RoomXY { x: left_x, y: zero })
+                    .min(cm.get(RoomXY { x: left_x, y: one }))
+                    .checked_add(1)
+                {
+                    Some(left_val) if left_val < current => {
+                        cm.set(
+                            RoomXY {
+                                x: current_x,
+                                y: zero,
+                            },
+                            left_val,
+                        );
+                        left_val
+                    }
+                    _ => current,
+                }
+            };
             let final_top = range_exclusive(zero, forty_nine)
                 .map(|y| {
                     (RoomXY { x: current_x, y }, unsafe {
@@ -78,40 +89,51 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                     })
                 })
                 .fold(initial_top, |top, (current_xy, lefts)| {
-                    let val = lefts
+                    let current_val = cm.get(current_xy);
+                    match lefts
                         .into_iter()
                         .map(|y| RoomXY { x: left_x, y })
                         .map(|xy| cm.get(xy))
                         .min()
                         .unwrap()
                         .min(top)
-                        .saturating_add(1)
-                        .min(cm.get(current_xy));
-                    cm.set(current_xy, val);
-                    val
+                        .checked_add(1)
+                    {
+                        Some(neighbour_val) if neighbour_val < current_val => {
+                            cm.set(current_xy, neighbour_val);
+                            neighbour_val
+                        }
+                        _ => current_val,
+                    }
                 });
-            cm.set(
-                RoomXY {
-                    x: current_x,
+            match final_top
+                .min(cm.get(RoomXY {
+                    x: left_x,
+                    y: forty_eight,
+                }))
+                .min(cm.get(RoomXY {
+                    x: left_x,
                     y: forty_nine,
-                },
-                cm.get(RoomXY {
-                    x: current_x,
-                    y: forty_nine,
-                })
-                .min(
-                    final_top
-                        .min(cm.get(RoomXY {
-                            x: left_x,
-                            y: forty_eight,
-                        }))
-                        .min(cm.get(RoomXY {
-                            x: left_x,
+                }))
+                .checked_add(1)
+            {
+                Some(val)
+                    if val
+                        < cm.get(RoomXY {
+                            x: current_x,
                             y: forty_nine,
-                        }))
-                        .saturating_add(1),
-                ),
-            );
+                        }) =>
+                {
+                    cm.set(
+                        RoomXY {
+                            x: current_x,
+                            y: forty_nine,
+                        },
+                        val,
+                    );
+                }
+                _ => (),
+            };
         });
 
     // Pass 2: Bottom-to-Top, Right-to-Left
@@ -125,24 +147,29 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                 y: forty_nine,
             }),
             |bottom, xy| {
-                let val = cm.get(xy).min(bottom.saturating_add(1));
-                cm.set(xy, val);
-                val
+                let current = cm.get(xy);
+                match bottom.checked_add(1) {
+                    Some(bottom_val) if bottom_val < current => {
+                        cm.set(xy, bottom_val);
+                        bottom_val
+                    }
+                    _ => current,
+                }
             },
         );
 
     // Phase B: the rest
     range_inclusive(zero, forty_eight)
+        .map(|x| (x, unsafe { RoomCoordinate::unchecked_new(x.u8() + 1) }))
         .rev()
-        .zip(range_inclusive(one, forty_nine).rev())
         .for_each(|(current_x, right_x)| {
-            let initial_bottom = cm
-                .get(RoomXY {
+            let initial_bottom = {
+                let current = cm.get(RoomXY {
                     x: current_x,
                     y: forty_nine,
-                })
-                .min(
-                    cm.get(RoomXY {
+                });
+                match cm
+                    .get(RoomXY {
                         x: right_x,
                         y: forty_nine,
                     })
@@ -150,15 +177,21 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                         x: right_x,
                         y: forty_eight,
                     }))
-                    .saturating_add(1),
-                );
-            cm.set(
-                RoomXY {
-                    x: current_x,
-                    y: forty_nine,
-                },
-                initial_bottom,
-            );
+                    .checked_add(1)
+                {
+                    Some(left) if left < current => {
+                        cm.set(
+                            RoomXY {
+                                x: current_x,
+                                y: forty_nine,
+                            },
+                            left,
+                        );
+                        left
+                    }
+                    _ => current,
+                }
+            };
             let final_bottom = range_exclusive(zero, forty_nine)
                 .map(|y| {
                     (RoomXY { x: current_x, y }, unsafe {
@@ -170,37 +203,48 @@ pub fn chebyshev_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
                     })
                 })
                 .rfold(initial_bottom, |bottom, (current_xy, rights)| {
-                    let val = rights
+                    let current_val = cm.get(current_xy);
+                    match rights
                         .into_iter()
                         .map(|y| RoomXY { x: right_x, y })
                         .map(|xy| cm.get(xy))
                         .min()
                         .unwrap()
                         .min(bottom)
-                        .saturating_add(1)
-                        .min(cm.get(current_xy));
-                    cm.set(current_xy, val);
-                    val
+                        .checked_add(1)
+                    {
+                        Some(neighbour_val) if neighbour_val < current_val => {
+                            cm.set(current_xy, neighbour_val);
+                            neighbour_val
+                        }
+                        _ => current_val,
+                    }
                 });
-            cm.set(
-                RoomXY {
-                    x: current_x,
+            match final_bottom
+                .min(cm.get(RoomXY { x: right_x, y: one }))
+                .min(cm.get(RoomXY {
+                    x: right_x,
                     y: zero,
-                },
-                cm.get(RoomXY {
-                    x: current_x,
-                    y: zero,
-                })
-                .min(
-                    final_bottom
-                        .min(cm.get(RoomXY {
-                            x: right_x,
+                }))
+                .checked_add(1)
+            {
+                Some(val)
+                    if val
+                        < cm.get(RoomXY {
+                            x: current_x,
                             y: zero,
-                        }))
-                        .min(cm.get(RoomXY { x: right_x, y: one }))
-                        .saturating_add(1),
-                ),
-            );
+                        }) =>
+                {
+                    cm.set(
+                        RoomXY {
+                            x: current_x,
+                            y: zero,
+                        },
+                        val,
+                    );
+                }
+                _ => (),
+            };
         });
 
     cm
@@ -247,31 +291,38 @@ pub fn manhattan_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
 
     // Phase B: the rest
     range_inclusive(one, forty_nine)
-        .zip(range_inclusive(zero, forty_eight))
+        .map(|x| (x, unsafe { RoomCoordinate::unchecked_new(x.u8() - 1) }))
         .for_each(|(current_x, left_x)| {
-            let initial_top = cm
-                .get(RoomXY {
+            let initial_top = {
+                let current = cm.get(RoomXY {
                     x: current_x,
                     y: zero,
-                })
-                .min(cm.get(RoomXY { x: left_x, y: zero }).saturating_add(1));
-            cm.set(
-                RoomXY {
-                    x: current_x,
-                    y: zero,
-                },
-                initial_top,
-            );
+                });
+                match cm.get(RoomXY { x: left_x, y: zero }).checked_add(1) {
+                    Some(left) if left < current => {
+                        cm.set(
+                            RoomXY {
+                                x: current_x,
+                                y: zero,
+                            },
+                            left,
+                        );
+                        left
+                    }
+                    _ => current,
+                }
+            };
             range_inclusive(one, forty_nine)
                 .map(|y| (RoomXY { x: current_x, y }, RoomXY { x: left_x, y }))
                 .fold(initial_top, |top, (current_xy, left_xy)| {
-                    let val = cm
-                        .get(left_xy)
-                        .min(top)
-                        .saturating_add(1)
-                        .min(cm.get(current_xy));
-                    cm.set(current_xy, val);
-                    val
+                    let current_val = cm.get(current_xy);
+                    match cm.get(left_xy).min(top).checked_add(1) {
+                        Some(other) if other < current_val => {
+                            cm.set(current_xy, other);
+                            other
+                        }
+                        _ => current_val,
+                    }
                 });
         });
 
@@ -294,38 +345,45 @@ pub fn manhattan_distance_transform_from_cost_matrix(mut cm: LocalCostMatrix) ->
 
     // Phase B: the rest
     range_inclusive(zero, forty_eight)
+        .map(|x| (x, unsafe { RoomCoordinate::unchecked_new(x.u8() + 1) }))
         .rev()
-        .zip(range_inclusive(one, forty_nine).rev())
         .for_each(|(current_x, right_x)| {
-            let initial_bottom = cm
-                .get(RoomXY {
+            let initial_bottom = {
+                let current = cm.get(RoomXY {
                     x: current_x,
                     y: forty_nine,
-                })
-                .min(
-                    cm.get(RoomXY {
+                });
+                match cm
+                    .get(RoomXY {
                         x: right_x,
                         y: forty_nine,
                     })
-                    .saturating_add(1),
-                );
-            cm.set(
-                RoomXY {
-                    x: current_x,
-                    y: forty_nine,
-                },
-                initial_bottom,
-            );
+                    .checked_add(1)
+                {
+                    Some(right) if right < current => {
+                        cm.set(
+                            RoomXY {
+                                x: current_x,
+                                y: forty_nine,
+                            },
+                            right,
+                        );
+                        right
+                    }
+                    _ => current,
+                }
+            };
             range_inclusive(zero, forty_eight)
                 .map(|y| (RoomXY { x: current_x, y }, RoomXY { x: right_x, y }))
                 .rfold(initial_bottom, |bottom, (current_xy, right_xy)| {
-                    let val = cm
-                        .get(right_xy)
-                        .min(bottom)
-                        .saturating_add(1)
-                        .min(cm.get(current_xy));
-                    cm.set(current_xy, val);
-                    val
+                    let current_val = cm.get(current_xy);
+                    match cm.get(right_xy).min(bottom).checked_add(1) {
+                        Some(other) if other < current_val => {
+                            cm.set(current_xy, other);
+                            other
+                        }
+                        _ => current_val,
+                    }
                 });
         });
 
