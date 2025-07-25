@@ -5,6 +5,7 @@ Unreleased
 ===================
 
 - Updated to 0.23 of screeps-game-api crate
+- Fix offline map deserialization failing on non-integer source and mineral amounts
 
 0.22.1 (2024-09-30)
 ===================
