@@ -235,7 +235,7 @@ where
             } else {
                 Err(serde::de::Error::custom("Number is not a valid float"))
             }
-        },
+        }
         Value::Null => Ok(0),
         _ => Err(serde::de::Error::custom("Expected a number")),
     }
