@@ -10,6 +10,8 @@ use serde::{
     Deserialize, Deserializer,
 };
 
+use serde_json::Value;
+
 const ROOM_AREA: usize = (ROOM_SIZE as usize) * (ROOM_SIZE as usize);
 
 #[derive(Clone, Deserialize, Debug)]
@@ -82,6 +84,7 @@ pub enum OfflineObject {
 
         density: Density,
         mineral_type: ResourceType,
+        #[serde(deserialize_with = "deserialize_float_to_u32")]
         mineral_amount: u32,
     },
     #[serde(rename_all = "camelCase")]
@@ -102,6 +105,7 @@ pub enum OfflineObject {
         x: RoomCoordinate,
         y: RoomCoordinate,
 
+        #[serde(deserialize_with = "deserialize_optional_u16")]
         energy: u16,
         energy_capacity: u16,
         ticks_to_regeneration: u16,
@@ -199,6 +203,41 @@ where
             Unexpected::Str(s),
             &"terrain string of correct length",
         ))
+    }
+}
+
+fn deserialize_float_to_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    match value {
+        Value::Number(num) => {
+            if let Some(f) = num.as_f64() {
+                Ok(f as u32) // Convert float to integer, potentially truncating
+            } else {
+                Err(serde::de::Error::custom("Number is not a valid float"))
+            }
+        }
+        _ => Err(serde::de::Error::custom("Expected a number")),
+    }
+}
+
+fn deserialize_optional_u16<'de, D>(deserializer: D) -> Result<u16, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    match value {
+        Value::Number(num) => {
+            if let Some(f) = num.as_u64() {
+                Ok(f as u16)
+            } else {
+                Err(serde::de::Error::custom("Number is not a valid float"))
+            }
+        }
+        Value::Null => Ok(0),
+        _ => Err(serde::de::Error::custom("Expected a number")),
     }
 }
 
